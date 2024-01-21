@@ -355,7 +355,10 @@ fn main() {
         let target = env::var("TARGET").unwrap();
         // according to https://github.com/alexcrichton/cc-rs/blob/master/src/lib.rs#L2189
         let mode = match env::var_os(format!("{lib_name}_STATIC")) {
-            Some(_) => "static",
+            Some(_) => {
+                println!("cargo:rustc-link-search=native={}", env::var(format!("{lib_name}_STDCXX_DIR")).unwrap());
+                "static"
+            },
             None => "dylib",
         };
         if target.contains("apple") || target.contains("freebsd") || target.contains("openbsd") {
