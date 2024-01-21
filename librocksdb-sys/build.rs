@@ -345,17 +345,23 @@ fn main() {
     }
     bindgen_rocksdb();
 
-    if !try_to_find_and_link_lib("ROCKSDB") {
+    let lib_name = "ROCKSDB";
+
+    if !try_to_find_and_link_lib(lib_name) {
         println!("cargo:rerun-if-changed=rocksdb/");
         fail_on_empty_directory("rocksdb");
         build_rocksdb();
     } else {
         let target = env::var("TARGET").unwrap();
         // according to https://github.com/alexcrichton/cc-rs/blob/master/src/lib.rs#L2189
+        let mode = match env::var_os(format!("{lib_name}_STATIC")) {
+            Some(_) => "static",
+            None => "dylib",
+        };
         if target.contains("apple") || target.contains("freebsd") || target.contains("openbsd") {
-            println!("cargo:rustc-link-lib=dylib=c++");
+            println!("cargo:rustc-link-lib={mode}=c++");
         } else if target.contains("linux") {
-            println!("cargo:rustc-link-lib=dylib=stdc++");
+            println!("cargo:rustc-link-lib={mode}=stdc++");
         }
     }
     if cfg!(feature = "snappy") && !try_to_find_and_link_lib("SNAPPY") {
